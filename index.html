@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist Mosaic Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #2a2a2a;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .mosaic-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 0;
+            background: #2a2a2a;
+            padding: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .artist-tile {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background-size: cover;
+            background-position: center;
+            background-color: #3a3a3a;
+        }
+
+        .artist-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            transition: background 0.3s ease;
+            pointer-events: none;
+        }
+
+        .mosaic-container:hover .artist-tile {
+            filter: brightness(0.7);
+        }
+
+        .artist-tile:hover {
+            filter: brightness(1);
+            z-index: 10;
+        }
+
+        .artist-tile:hover::before {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Video elements for each tile */
+        .tile-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.5s ease 0.3s;
+            z-index: 1;
+        }
+
+        .artist-tile:hover .tile-video {
+            opacity: 1;
+        }
+
+        /* Iframe elements for embedded videos */
+        .tile-iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%) scale(1.5);
+            border: none;
+            opacity: 0;
+            transition: opacity 0.5s ease 0.3s;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .artist-tile:hover .tile-iframe {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .hover-info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease 0.3s;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 0;
+        }
+
+        .tile-1 .hover-info,
+        .tile-3 .hover-info,
+        .tile-5 .hover-info,
+        .tile-7 .hover-info,
+        .tile-9 .hover-info,
+        .tile-11 .hover-info {
+            align-items: flex-start;
+        }
+
+        .tile-2 .hover-info,
+        .tile-4 .hover-info,
+        .tile-6 .hover-info,
+        .tile-8 .hover-info,
+        .tile-10 .hover-info {
+            align-items: flex-end;
+        }
+
+        .artist-tile:hover .hover-info {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .hover-text-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 4px;
+            border-radius: 0;
+            margin-bottom: 0;
+            max-width: 80%;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .hover-text-box.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .hover-name {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 18px;
+            font-weight: 300;
+            color: #222;
+            margin: 0;
+        }
+
+        .hover-description {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 300;
+            line-height: 1.6;
+            color: #444;
+            margin: 0;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        /* Default tile sizes */
+        .tile-1 {
+            grid-column: 1 / 5;
+            grid-row: 1 / 3;
+        }
+
+        .tile-2 {
+            grid-column: 5 / 8;
+            grid-row: 1 / 3;
+        }
+
+        .tile-3 {
+            grid-column: 8 / 13;
+            grid-row: 1 / 4;
+        }
+
+        .tile-4 {
+            grid-column: 1 / 4;
+            grid-row: 3 / 5;
+        }
+
+        .tile-5 {
+            grid-column: 4 / 8;
+            grid-row: 3 / 5;
+        }
+
+        .tile-6 {
+            grid-column: 8 / 11;
+            grid-row: 4 / 6;
+        }
+
+        .tile-7 {
+            grid-column: 11 / 13;
+            grid-row: 4 / 6;
+        }
+
+        .tile-8 {
+            grid-column: 1 / 5;
+            grid-row: 5 / 9;
+        }
+
+        .tile-9 {
+            grid-column: 5 / 8;
+            grid-row: 5 / 9;
+        }
+
+        .tile-10 {
+            grid-column: 8 / 11;
+            grid-row: 6 / 9;
+        }
+
+        .tile-11 {
+            grid-column: 11 / 13;
+            grid-row: 6 / 9;
+        }
+
+        /* Tile hover expansions */
+        .mosaic-container:has(.tile-1:hover) {
+            grid-template-columns: 6fr 1fr 1fr 1fr 2fr 2fr 2fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-2:hover) {
+            grid-template-columns: 1fr 1fr 1fr 1fr 4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 3fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-3:hover) {
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 2fr 2fr 2fr 2fr 2fr;
+            grid-template-rows: 4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-4:hover) {
+            grid-template-columns: 4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 3fr 1fr 1fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-5:hover) {
+            grid-template-columns: 1fr 1fr 1fr 3fr 2fr 2fr 2fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 3fr 2fr 1fr 1fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-6:hover) {
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 4fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 3fr 2fr 1fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-7:hover) {
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 3fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 3fr 2fr 1fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-8:hover) {
+            grid-template-columns: 6fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr 1fr 4fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-9:hover) {
+            grid-template-columns: 1fr 1fr 1fr 1fr 4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr 1fr 4fr 1fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-10:hover) {
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 4fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 3fr 1fr;
+        }
+
+        .mosaic-container:has(.tile-11:hover) {
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 3fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 3fr 1fr;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mosaic-container">
+        <!-- Tile 1: La Jetée -->
+        <div class="artist-tile tile-1" style="background-image: url('./assets/images/lajetee-image.jpg');">
+            <iframe class="tile-iframe"
+                src="https://player.vimeo.com/video/658254211?h=d46f8d498e&background=0&autoplay=0&loop=1&muted=0"
+                allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">La Jetée</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">The story of a man forced to explore his memories in the wake of World
+                        War III's devastation, told through still images.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="artist-tile tile-2" style="background-image: url('./assets/images/meatjoy-image.jpg');">
+            <iframe class="tile-iframe"
+                src="https://www.youtube.com/embed/7_Czlo1tRZc?enablejsapi=1&controls=0&mute=1&autoplay=0&loop=1&playlist=7_Czlo1tRZc"
+                allow="autoplay; encrypted-media" allowfullscreen>
+            </iframe>
+
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">Meat Joy</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">
+                        Meat Joy embodies Schneemann's concept of "kinetic theater," in which
+                        performers engage in scored and improvised movements...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Tile 3: Chicken for Linda -->
+        <div class="artist-tile tile-3" style="background-image: url('./assets/images/linda-image.jpg');">
+            <iframe class="tile-iframe"
+                src="https://www.youtube.com/embed/TfFLS7iGOfU?enablejsapi=1&autoplay=0&loop=1&playlist=TfFLS7iGOfU"
+                allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">Chicken for Linda</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">Paulette, a frazzled French mother, and her plucky 8-year-old daughter,
+                        Linda. The story begins with an expressive battle of mother-daughter wills that soon spirals out
+                        of control. Discovering she has unfairly misjudged Linda, Paulette asks what she can do to make
+                        it up to her.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile 4: The Artist is Present -->
+        <div class="artist-tile tile-4" style="background-image: url('./assets/images/artistpresent-image.jpg');">
+            <iframe class="tile-iframe"
+                src="https://www.youtube.com/embed/xlf68X2qEpM?enablejsapi=1&autoplay=0&loop=1&playlist=xlf68X2qEpM"
+                allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">The Artist is Present</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">"Sit silently with the artist for a duration of your choosing," so the
+                        instructions read on a small plaque in the second-floor atrium at MoMA. Behind the plaque, a
+                        queue of visitors forms, eager to enter a large square space, demarcated only by tape on the
+                        floor, to sit down at a wooden table across from a dark-haired woman in a red dress that
+                        conceals every part of her body save her face and her hands. She is Marina Abramović.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile 5: The Green Line -->
+        <div class="artist-tile tile-5" style="background-image: url('./assets/images/green-image.jpg');">
+            <iframe class="tile-iframe"
+                src="https://player.vimeo.com/video/132929393?h=0a203a9bba&background=0&autoplay=0&loop=1&muted=0"
+                allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">The Green Line</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">In the summer of 1995 Francis Alÿs performed a walk with a leaking can
+                        of blue paint in the city of São Paulo. The walk was then read as a poetic gesture of sorts. In
+                        June 2004, he re-enacted that same performance with a leaking can of green paint by tracing a
+                        line following the portion of the 'Green Line' that runs through the municipality of Jerusalem.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile 6: Adrian Piper - The Mythic Being -->
+        <div class="artist-tile tile-6" style="background-image: url('./assets/images/piper-image.jpg');">
+            <video class="tile-video" muted loop preload="auto" playsinline>
+                <source src="./assets/videos/piper-video.mp4" type="video/mp4">
+            </video>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">The Mythic Being</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">Piper began The Mythic Being in 1973, merging a male alter ego (the
+                        Mythic Being) with episodes from her own personal history. The project, which includes
+                        photographs, drawings, and performances, first took shape in a series of seventeen newspaper
+                        advertisements in New York's Village Voice.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile 7: Andrea Fraser - Little Frank and His Carp -->
+        <div class="artist-tile tile-7" style="background-image: url('./assets/images/fraser-image.jpg');">
+            <iframe class="tile-iframe"
+                src="https://www.youtube.com/embed/auOKsXnMmkg?enablejsapi=1&autoplay=0&loop=1&playlist=auOKsXnMmkg"
+                allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">Little Frank and His Carp</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">Andrea Fraser visits the Guggenheim Museum Bilbao in Spain designed by
+                        the architect Frank Gehry, or "Little Frank." Follow her as she wanders the atrium and listens
+                        to the museum's official audio guide.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile 8: 24 Preludes -->
+        <div class="artist-tile tile-8" style="background-image: url('./assets/images/tile-image.jpg');">
+            <video class="tile-video" muted loop preload="auto" playsinline>
+                <source src="./assets/videos/tile-video.mp4" type="video/mp4">
+            </video>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">24 Preludes</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">These tiles are data visualizations of Frederic Chopin's famous 24
+                        Preludes, which the composer wrote while living in Mallorca from 1838 to 1839. Their designs
+                        fuse the math-based nature of musical notation with the lyrical experience of listening to each
+                        piece.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile 9: O Superman -->
+        <div class="artist-tile tile-9" style="background-image: url('./assets/images/osuperman-image.jpg');">
+            <iframe class="tile-iframe"
+                src="https://player.vimeo.com/video/3610524?h=6c667358a2&background=0&autoplay=0&loop=1&muted=0"
+                allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">O Superman</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">Eight minutes long, bewilderingly experimental, and incomparable to any
+                        music that came before it. Laurie Anderson's song, "O Superman" was never supposed to find
+                        popular success. Yet, as David Honingmann wrote in the Financial Times, "It was all gloriously
+                        uncommercial until — for a brief moment — it wasn't."</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile 10: Yoko Ono - Voice Piece for Soprano -->
+        <div class="artist-tile tile-10" style="background-image: url('./assets/images/yoko-image.jpg');">
+            <iframe class="tile-iframe"
+                src="https://www.youtube.com/embed/HdZ9weP5i68?enablejsapi=1&autoplay=0&loop=1&playlist=HdZ9weP5i68&controls=0"
+                allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">Voice Piece for Soprano</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">Performance piece by Yoko Ono for the Voice Piece for Soprano / Whisper
+                        Piece / Wish Tree exhibition at the MoMA. "From a whisper to a scream," Ono transversed from the
+                        Whisper Piece into the scream, dictated by the directions inside of the exhibition.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile 11: I Saw the TV Glow -->
+        <div class="artist-tile tile-11" style="background-image: url('./assets/images/moon-image.jpg');">
+            <video class="tile-video" muted loop preload="auto" playsinline>
+                <source src="./assets/videos/moon-video.mp4" type="video/mp4">
+            </video>
+            <div class="hover-info">
+                <div class="hover-text-box">
+                    <h3 class="hover-name">I Saw the TV Glow</h3>
+                </div>
+                <div class="hover-text-box">
+                    <p class="hover-description">"If I was just trying to faithfully recreate something I invented for
+                        myself two years ago, I would be so sleepy, so bored, and you would feel it in the movie.
+                        Production is collaborative: you're collaborating with different artists, but
+                        you're also collaborating with reality and the world as it exists." —⁠Jane Schoenbrun (Director)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle iframe video playback with Vimeo/YouTube API
+        const tiles = document.querySelectorAll('.artist-tile');
+        const videoTimers = new Map(); // Store timers for each tile
+
+        tiles.forEach(tile => {
+            const iframe = tile.querySelector('.tile-iframe');
+            const video = tile.querySelector('.tile-video');
+
+            tile.addEventListener('mouseenter', () => {
+                // Clear any existing timer for this tile
+                if (videoTimers.has(tile)) {
+                    clearTimeout(videoTimers.get(tile));
+                    videoTimers.delete(tile);
+                }
+
+                if (iframe) {
+                    // For YouTube iframes
+                    if (iframe.src.includes('youtube.com')) {
+                        iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                        iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+                    }
+                    // For Vimeo iframes
+                    else if (iframe.src.includes('vimeo.com')) {
+                        iframe.contentWindow.postMessage('{"method":"play"}', '*');
+                        iframe.contentWindow.postMessage('{"method":"setVolume","value":1}', '*');
+                    }
+                }
+
+                if (video) {
+                    video.muted = false;
+                    video.play().catch(err => console.log('Video play failed:', err));
+                }
+            });
+
+            tile.addEventListener('mouseleave', () => {
+                // Set a 10-second timer before stopping the video
+                const timer = setTimeout(() => {
+                    if (iframe) {
+                        // For YouTube iframes
+                        if (iframe.src.includes('youtube.com')) {
+                            iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                            iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[0]}', '*');
+                        }
+                        // For Vimeo iframes
+                        else if (iframe.src.includes('vimeo.com')) {
+                            iframe.contentWindow.postMessage('{"method":"pause"}', '*');
+                            iframe.contentWindow.postMessage('{"method":"setCurrentTime","value":0}', '*');
+                        }
+                    }
+
+                    if (video) {
+                        video.pause();
+                        video.currentTime = 0;
+                        video.muted = true;
+                    }
+
+                    videoTimers.delete(tile);
+                }, 10000); // 10 seconds delay
+
+                videoTimers.set(tile, timer);
+            });
+        });
+
+        // Make text boxes clickable to hide them
+        const textBoxes = document.querySelectorAll('.hover-text-box');
+
+        textBoxes.forEach(box => {
+            box.addEventListener('click', (e) => {
+                e.stopPropagation();
+                box.classList.add('hidden');
+            });
+        });
+
+        // Reset text boxes when mouse leaves tile
+        tiles.forEach(tile => {
+            tile.addEventListener('mouseleave', () => {
+                const boxes = tile.querySelectorAll('.hover-text-box');
+                boxes.forEach(box => box.classList.remove('hidden'));
+            });
+        });
+    </script>
+</body>
+
+</html>
